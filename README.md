@@ -1,5 +1,4 @@
-# HackerRankCPP
-C++ hackerrank (medium challenges)
+
 # Hexagonal Grid Cellular Automaton Simulation
 
 This project simulates a cellular automaton on a hexagonal grid. It uses a collision and streaming model to update the states of particles at each node of the grid over a series of timesteps. The simulation is implemented in C and outputs the grid configuration at each timestep for further analysis or visualization.
