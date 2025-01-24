@@ -1,5 +1,4 @@
-% MATLAB script to visualize the hexagonal grid states
-
+% MATLAB script to 
 clc;
 clear;
 close all;
@@ -8,15 +7,23 @@ close all;
 M = 30; % Number of rows
 N = 10; % Number of columns
 DIRECTIONS = 6; % Number of directions in the hexagonal grid
-TIMESTEPS = 100; % Total timesteps to visualize
+start_timestep = 0; % Starting timestep
+num_timesteps = 5; % Number of timesteps to compare
 
-% Hexagonal grid offsets for plotting
-theta = (0:5) * pi / 3; % Angles for hexagon vertices
-hex_x = cos(theta);
-hex_y = sin(theta);
+% Obstacle parameters
+obstacle_center = [8, 4]; % Center of the obstacle (row, column)
+obstacle_radius = 1; % Radius of the obstacle
 
-% Load and visualize each timestep
-for timestep = 0:TIMESTEPS-1
+% Arrow directions for the hexagonal grid
+arrow_directions = [0, pi/3, 2*pi/3, pi, 4*pi/3, 5*pi/3];
+
+% Initialize the figure
+figure;
+hold on;
+set(gcf, 'Position', [100, 100, 1600, 900]); % Adjust figure size
+
+% Iterate through the timesteps
+for timestep = start_timestep:(start_timestep + num_timesteps - 1)
     % Load the configuration file
     filename = sprintf("config_t%d.txt", timestep);
     if ~isfile(filename)
@@ -25,18 +32,17 @@ for timestep = 0:TIMESTEPS-1
     end
     data = readlines(filename);
 
-    % Initialize the figure
-    figure(1);
-    clf;
+    % Create a subplot for the current timestep
+    subplot(1, num_timesteps, timestep - start_timestep + 1);
     hold on;
     axis equal;
-    title(sprintf("Hexagonal Grid at Timestep %d", timestep));
-    xlabel("Columns");
-    ylabel("Rows");
+    title(sprintf("Timestep %d", timestep), 'FontSize', 12);
+    xlabel("Columns", 'FontSize', 10);
+    ylabel("Rows", 'FontSize', 10);
 
     % Process the grid data
     for i = 1:numel(data)
-        line = data(i);
+        line = strtrim(data(i));
         if line == ""
             continue;
         end
@@ -50,36 +56,44 @@ for timestep = 0:TIMESTEPS-1
         tokens = tokens{1};
         row = str2double(tokens{1});
         col = str2double(tokens{2});
-        state = str2num(tokens{3}); %#ok<ST2NM> % Extract state as array
+        state = str2num(tokens{3}); %#ok<ST2NM>
+        if isempty(state) || numel(state) < DIRECTIONS
+            warning("Invalid state data at row %d, col %d. Skipping...", row, col);
+            continue;
+        end
 
         % Convert grid coordinates to hexagonal positions
-        x_center = col * 1.5;
-        y_center = row * sqrt(3);
+        x_center = col * 1.5; % Adjust column spacing
+        y_center = row * sqrt(3); % Adjust row spacing
 
-        % Adjust hexagon position for staggered rows
+        % Adjust arrow position for staggered rows
         if mod(row, 2) == 1
             x_center = x_center + 0.75;
         end
 
-        % Draw the hexagon
-        fill(hex_x + x_center, hex_y + y_center, [0.9 0.9 0.9], 'EdgeColor', 'k');
+        % Check if the cell is inside the obstacle
+        dx = row - obstacle_center(1);
+        dy = col - obstacle_center(2);
+        if dx^2 + dy^2 <= obstacle_radius^2
+            % Mark obstacle as a black circle
+            plot(x_center, y_center, 'ko', 'MarkerSize', 10, 'MarkerFaceColor', 'k');
+            continue;
+        end
 
         % Add arrows for each direction
         for d = 1:DIRECTIONS
             if state(d) == 1
-                arrow_x = [x_center, x_center + 0.3 * cos((d-1) * pi / 3)];
-                arrow_y = [y_center, y_center + 0.3 * sin((d-1) * pi / 3)];
-                plot(arrow_x, arrow_y, 'r-', 'LineWidth', 1.5);
+                arrow_x = [x_center, x_center + 0.5 * cos(arrow_directions(d))];
+                arrow_y = [y_center, y_center + 0.5 * sin(arrow_directions(d))];
+                plot(arrow_x, arrow_y, 'r-', 'LineWidth', 1.5); % Red arrows for directions
             end
         end
     end
 
-    % Configure plot settings
+    % Configure plot settings for the subplot
+    xlim([-1, N+1] * 1.5); % Full column range
+    ylim([-1, M+1] * sqrt(3)); % Full row range
     axis off;
-    drawnow;
-
-    % Pause for visualization
-    pause(0.1);
 end
 
-disp("Visualization complete.");
+disp("Full grid comparison plots complete.");

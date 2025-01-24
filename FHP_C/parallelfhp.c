@@ -4,8 +4,10 @@
 #include <time.h>
 #include <mpi.h>
 
-#define M 30  // Grid rows
-#define N 10  // Grid columns
+#define A 0.1  // Lattice spacing
+#define M ((int)(30 / A))  // Scaled grid rows
+#define N ((int)(10 / A))  // Scaled grid columns
+
 #define DIRECTIONS 6
 #define TIMESTEPS 100
 
